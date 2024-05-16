@@ -17,11 +17,25 @@ app.use(cors({
 
 app.get('/download', async (req, res) => {
     let videoUrl = decodeURIComponent(req.query.url);
-    let title = decodeURIComponent(req.query.title) || 'Default Title';
-    let artist = decodeURIComponent(req.query.artist) || 'Unknown Artist';
-    let album = decodeURIComponent(req.query.album) || 'Unknown Album';
+    let title;
+    let artist;
+    let album;
 
-
+    if(req.query.title === undefined){
+        title = 'Unknown Title';
+    } else {
+        title = decodeURIComponent(req.query.title);
+    }
+    if(req.query.artist === undefined){
+        artist = 'Unknown Artist';
+    } else {
+        artist = decodeURIComponent(req.query.artist);
+    }
+    if(req.query.album === undefined){
+        album = 'Unknown Album';
+    } else {
+        album = decodeURIComponent(req.query.album);
+    }
 
     if (!videoUrl || !ytdl.validateURL(videoUrl)) {
         return res.status(400).send('Invalid URL provided.');

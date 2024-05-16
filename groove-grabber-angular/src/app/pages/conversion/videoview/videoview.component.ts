@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {Subscription} from "rxjs";
 import {DataService} from "../../../services/data.service";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import axios from "axios";
-import {DownloadService} from "../../../services/download.service";
+import {BackendService} from "../../../services/backend.service";
+import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 
 @Component({
   selector: 'app-videoview',
@@ -23,12 +24,14 @@ export class VideoviewComponent {
   author: string | null = null;
   videoUrl: string | null = null;
   channelUrl: string | null = null;
+  videoEmbed: SafeResourceUrl | null = null;
 
-  titleInput: string | null = null;
-  artistInput: string | null = null;
-  albumInput: string | null = null;
+  @Input() titleInput!: string | null;
+  @Input() artistInput!: string | null;
+  @Input() albumInput!: string | null;
+  @Input() filenameInput!: string | null;
 
-  constructor(private dataService: DataService, private downloadService: DownloadService) {
+  constructor(private dataService: DataService, private downloadService: BackendService, private sanitizer: DomSanitizer) {
     this.subscription = this.dataService.data$.subscribe(data => {
       console.log('received ID:' + data);
       if(data == ''){
@@ -61,6 +64,7 @@ export class VideoviewComponent {
       this.author = json['author_name']
       this.videoUrl = videoUrl;
       this.channelUrl = json['author_url'];
+      this.videoEmbed = this.sanitizer.bypassSecurityTrustResourceUrl('https://www.youtube.com/embed/' + videoId);
       this.isVideoDataReady = true;
       console.log('Finished Loading Video Data');
     } catch (error) {
@@ -75,7 +79,6 @@ export class VideoviewComponent {
     }
     let title;
     let artist;
-    let album;
 
     if(this.titleInput != null && this.titleInput != '') {
       title = this.titleInput
@@ -98,8 +101,22 @@ export class VideoviewComponent {
       audioUrl.searchParams.append("album", encodeURIComponent(this.albumInput));
     }
 
-    console.log('download audio');
+    let filename;
+    if(this.filenameInput != null && this.filenameInput != ''){
+      let indexOfPoint = this.filenameInput.indexOf('.');
+      let reverseIndexOfPoint = (this.filenameInput.length - indexOfPoint - 1);
+      if(indexOfPoint !== -1 && (reverseIndexOfPoint == 3 || reverseIndexOfPoint == 4)){
+        filename = this.filenameInput.substring(0, indexOfPoint);
+      }
+      else{
+        filename = this.filenameInput;
+      }
+    }
+    else{
+      filename = title;
+    }
 
-    this.downloadService.downloadFile(audioUrl.toString(), title);
+    console.log('download audio');
+    this.downloadService.downloadFile(audioUrl.toString(), filename);
   }
 }

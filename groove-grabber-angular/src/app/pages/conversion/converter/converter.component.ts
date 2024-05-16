@@ -16,7 +16,13 @@ import {DataService} from "../../../services/data.service";
 })
 export class ConverterComponent {
   conversionStarted = false;
+  settingsOpen = false;
   urlInput: string | null = null;
+
+  titleInput: string | null = null;
+  artistInput: string | null = null;
+  albumInput: string | null = null;
+  filenameInput: string | null = null;
 
   constructor(private route: ActivatedRoute, private dataService: DataService) { }
 
@@ -57,7 +63,8 @@ export class ConverterComponent {
         return null;
       }
       else{
-        return url.substring(url.indexOf('?v=') + 3);
+        let urlParams = new URLSearchParams(url.substring(url.indexOf('?')));
+        return urlParams.get('v');
       }
     }
   }
