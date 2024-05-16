@@ -1,0 +1,4 @@
+.content-wrapper {
+  padding-bottom: 125px; /* Stelle sicher, dass dies der Höhe des Footers entspricht oder sie übertrifft */
+  padding-top: 75px; /* Stelle sicher, dass dies der Höhe des Footers entspricht oder sie übertrifft */
+}

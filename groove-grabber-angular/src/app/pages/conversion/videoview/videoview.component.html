@@ -1,0 +1,17 @@
+<div class="container">
+  @if (isVideoDataReady) {
+    <div>
+      <a class="text-decoration-none" [href]="videoUrl">
+        <img class="rounded mx-auto d-block" [src]="thumbnailUrl" alt="Thumbnail" width="50%">
+        <h3 class="text-decoration-none text-black mt-2 fw-bold text-center">{{title}}</h3>
+      </a>
+      <a class="text-decoration-none" [href]="channelUrl">
+        <p class="text-black text-center">{{author}}</p>
+      </a>
+    </div>
+    <input type="text" [(ngModel)]="titleInput" class="mt-2 form-control" placeholder="Title (optional)" aria-label="Title (optional)">
+    <input type="text" [(ngModel)]="artistInput" class="form-control" placeholder="Artist (optional)" aria-label="Artist (optional)">
+    <input type="text" [(ngModel)]="albumInput" class="form-control" placeholder="Album (optional)" aria-label="Album (optional)">
+    <button class="d-block mx-auto mt-4 mb-4 btn btn-primary btn-lg gg-bg-red-light btn-danger" (click)="downloadAudio()">Download Audio</button>
+  }
+</div>

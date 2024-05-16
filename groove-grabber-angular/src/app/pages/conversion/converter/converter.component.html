@@ -1,0 +1,11 @@
+<div class="container mt-5 p-3 bg-light shadow-sm rounded">
+  <div class="container input-group mb-4">
+    <input type="text" [(ngModel)]="urlInput" class="form-control" placeholder="Youtube-URL" aria-label="Youtube-URL">
+    <div class="input-group-append">
+      <button (click)="onConvertClick()" class="btn btn-outline-secondary btn-outline-danger" type="button">Convert</button>
+    </div>
+  </div>
+  @if (conversionStarted) {
+    <app-videoview></app-videoview>
+  }
+</div>

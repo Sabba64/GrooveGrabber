@@ -1,1 +1,53 @@
 /* You can add global styles to this file, and also import other style files */
+.gg-bg-white {
+  background-color: #EEEEEE;
+}
+
+.gg-text-white {
+  color: #EEEEEE;
+}
+
+.gg-bg-black {
+  background-color: #151515;
+}
+
+.gg-text-black {
+  color: #151515;
+}
+
+.gg-bg-red {
+  background-color: #A91D3A;
+}
+
+.gg-text-red {
+  color: #A91D3A;
+}
+
+.gg-bg-red-light {
+  background-color: #C73659;
+}
+
+.gg-text-red-light {
+  color: #C73659;
+}
+
+html {
+  background-color: #EEEEEE;
+}
+
+.gradient-text {
+  font-size: 2rem; /* Größere Schriftgröße */
+  font-weight: bold; /* Fettgedruckter Text */
+  background: -webkit-linear-gradient(left, #ff0000, #ff6347, #dd0000); /* Roter Farbverlauf */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; /* Stellt sicher, dass der Text durchsichtig ist und nur der Gradient angezeigt wird */
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
