@@ -2,7 +2,6 @@ import {Component, Input} from '@angular/core';
 import {Subscription} from "rxjs";
 import {DataService} from "../../../services/data.service";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import axios from "axios";
 import {BackendService} from "../../../services/backend.service";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 
@@ -25,13 +24,16 @@ export class VideoviewComponent {
   videoUrl: string | null = null;
   channelUrl: string | null = null;
   videoEmbed: SafeResourceUrl | null = null;
+  downloads: number | null = null;
+  views: number | null = null;
+  isLoading: boolean = false;
 
   @Input() titleInput!: string | null;
   @Input() artistInput!: string | null;
   @Input() albumInput!: string | null;
   @Input() filenameInput!: string | null;
 
-  constructor(private dataService: DataService, private downloadService: BackendService, private sanitizer: DomSanitizer) {
+  constructor(private dataService: DataService, private backendService: BackendService, private sanitizer: DomSanitizer) {
     this.subscription = this.dataService.data$.subscribe(data => {
       console.log('received ID:' + data);
       if(data == ''){
@@ -53,23 +55,24 @@ export class VideoviewComponent {
   }
 
   async loadVideoInfoFromId(videoId: string) {
-    let videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
-    let apiUrl = `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`;
-    try {
-      console.log('Fetching video info...');
-      let response = await axios.get(apiUrl);
-      let json = response.data;
-      this.thumbnailUrl = json['thumbnail_url'].substring(0, json['thumbnail_url'].lastIndexOf('/') + 1) + "maxresdefault.jpg";
-      this.title = json['title'];
-      this.author = json['author_name']
-      this.videoUrl = videoUrl;
-      this.channelUrl = json['author_url'];
-      this.videoEmbed = this.sanitizer.bypassSecurityTrustResourceUrl('https://www.youtube.com/embed/' + videoId);
-      this.isVideoDataReady = true;
-      console.log('Finished Loading Video Data');
-    } catch (error) {
-      throw Error("Could not load video info");
-    }
+    let reqUrl = new URL("http://localhost:3000/videoInfo");
+    reqUrl.searchParams.append("id", encodeURIComponent(videoId));
+    this.backendService.getJson(reqUrl.toString()).subscribe({
+      next: (json: any) => {
+        if (!json) {
+          //TODO: Fehlermeldung?
+        }
+        this.thumbnailUrl = json['thumbnail_url'].substring(0, json['thumbnail_url'].lastIndexOf('/') + 1) + "maxresdefault.jpg";
+        this.title = json['title'];
+        this.author = json['author_name']
+        this.videoUrl = json['videoUrl'];
+        this.channelUrl = json['author_url'];
+        this.videoEmbed = this.sanitizer.bypassSecurityTrustResourceUrl('https://www.youtube.com/embed/' + videoId);
+        this.isVideoDataReady = true;
+        this.downloads = json['downloads'];
+        this.views = json['views'];
+      }
+    });
   }
 
   downloadAudio(): void {
@@ -117,6 +120,18 @@ export class VideoviewComponent {
     }
 
     console.log('download audio');
-    this.downloadService.downloadFile(audioUrl.toString(), filename);
+    this.isLoading = true;
+    this.backendService.downloadFile(audioUrl.toString(), filename)
+      .then(() => {
+        if(this.downloads != null){
+          this.downloads = this.downloads + 1;
+        }
+      })
+      .catch((err) => {
+        //TODO: Fehlermeldung?
+      })
+      .finally(() =>{
+        this.isLoading = false;
+      });
   }
 }
