@@ -1,4 +1,5 @@
-//conversion
+//conversion & Info
+const axios = require("axios");
 const ytdl = require('ytdl-core');
 const NodeID3 = require('node-id3');
 //system
@@ -10,10 +11,50 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = 3000
+app.use(express.json())
+//database
+const mongoose = require('mongoose');
+const dbLogic = require('./src/dbLogic');
 
 app.use(cors({
     origin: 'http://localhost:4200'
 }));
+
+async function initializeDatabase() {
+    mongoose.connect("mongodb+srv://190432:Hallo123@wmc.ak93zks.mongodb.net/groovegrabber")
+        .then((info) => {
+            console.log('DB CONNECTED');
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+}
+
+app.get('/videoInfo', async (req, res) => {
+    let videoId = decodeURIComponent(req.query.id);
+    let videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+    let apiUrl = `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`;
+    try {
+        let response = await axios.get(apiUrl);
+        let json = response.data;
+        json['videoUrl'] = videoUrl;
+        dbLogic.incrementViews()
+            .then((res) => {
+                json['downloads'] = res.downloadCounter;
+                json['views'] = res.viewCounter;
+            })
+            .catch((e) => {
+                console.error(e);
+                json['downloads'] = 0;
+                json['views'] = 0;
+            })
+            .finally(() => {
+                res.status(200).send(json);
+            })
+    } catch (error) {
+        return res.status(500).send('Could not load video info');
+    }
+});
 
 app.get('/download', async (req, res) => {
     let videoUrl = decodeURIComponent(req.query.url);
@@ -64,16 +105,23 @@ app.get('/download', async (req, res) => {
                         return res.status(500).send('Failed to update ID3 tags.');
                     }
 
-                    let downloadname = title.replace(/[^a-zA-Z0-9_.-]/g, '_');
-                    res.header('Content-Disposition', `attachment; filename="${downloadname}.mp3"`);
-                    res.sendFile(tempFilePath, (err) => {
-                        if (err) {
-                            console.error(err);
-                            cleanupFile(tempFilePath);
-                            return res.status(500).send('Failed to send file.');
-                        }
-                        cleanupFile(tempFilePath);
-                    });
+                    dbLogic.incrementDownloads()
+                        .then((res) => {})
+                        .catch((e) => {
+                            console.error(e);
+                        })
+                        .finally(() => {
+                            let downloadName = title.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                            res.header('Content-Disposition', `attachment; filename="${downloadName}.mp3"`);
+                            res.sendFile(tempFilePath, (err) => {
+                                if (err) {
+                                    console.error(err);
+                                    cleanupFile(tempFilePath);
+                                    return res.status(500).send('Failed to send file.');
+                                }
+                                cleanupFile(tempFilePath);
+                            });
+                        })
                 });
             });
     } catch (error) {
@@ -92,5 +140,6 @@ function cleanupFile(filePath) {
 }
 
 app.listen(port, () => {
+    initializeDatabase();
     console.log(`Server is running on port ${port}`);
 });
