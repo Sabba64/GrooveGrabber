@@ -10,18 +10,21 @@ const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 3000
+const port = process.env.PORT || 3000;
 app.use(express.json())
 //database
 const mongoose = require('mongoose');
 const dbLogic = require('./src/dbLogic');
+//env var
+const dotenv = require('dotenv');
+dotenv.config();
 
 app.use(cors({
     origin: 'http://localhost:4200'
 }));
 
-async function initializeDatabase() {
-    mongoose.connect("mongodb+srv://190432:Hallo123@wmc.ak93zks.mongodb.net/groovegrabber")
+function initializeDatabase() {
+    mongoose.connect(process.env.CONNECTIONSTRING)
         .then((info) => {
             console.log('DB CONNECTED');
         })
@@ -33,6 +36,10 @@ async function initializeDatabase() {
 app.get('/videoInfo', async (req, res) => {
     let videoId = decodeURIComponent(req.query.id);
     let videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+    if (!ytdl.validateURL(videoUrl)) {
+        return res.status(400).send('Invalid URL provided.');
+    }
+
     let apiUrl = `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`;
     try {
         let response = await axios.get(apiUrl);

@@ -5,10 +5,11 @@ import {ConverterComponent} from "./pages/conversion/converter/converter.compone
 import {PagenotfoundComponent} from "./pages/pagenotfound/pagenotfound.component";
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'contact', component: ContactComponent },
-  { path: 'convert', component: ConverterComponent },
+  { path: '', component: HomeComponent, title: 'GrooveGrabber' },
+  { path: 'contact', component: ContactComponent, title: 'Contact us' },
   { path: '404', component: PagenotfoundComponent },
-  { path: ':videoid', component: ConverterComponent },
-  { path: '**', component: PagenotfoundComponent },
+  { path: 'convert', component: ConverterComponent, title: 'Convert' },
+  { path: 'watch', component: ConverterComponent, title: 'Convert' },
+  { path: ':videoid', component: ConverterComponent, title: 'Convert' },
+  { path: '**', component: PagenotfoundComponent, title: '404 Page not found' },
 ];

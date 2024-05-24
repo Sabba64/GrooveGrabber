@@ -17,7 +17,7 @@ import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 })
 export class VideoviewComponent {
   subscription: Subscription;
-  isVideoDataReady: boolean = false;
+  showVideoCard: boolean = false;
   thumbnailUrl: string | null = null;
   title: string | null = null;
   author: string | null = null;
@@ -27,6 +27,7 @@ export class VideoviewComponent {
   downloads: number | null = null;
   views: number | null = null;
   isLoading: boolean = false;
+  isError: boolean = false;
 
   @Input() titleInput!: string | null;
   @Input() artistInput!: string | null;
@@ -46,6 +47,8 @@ export class VideoviewComponent {
         })
         .catch(e => {
           //TODO: Fehlermeldung?
+          this.isError = true;
+          this.showVideoCard = true;
         })
     });
   }
@@ -55,30 +58,43 @@ export class VideoviewComponent {
   }
 
   async loadVideoInfoFromId(videoId: string) {
+    this.isError = false;
     let reqUrl = new URL("http://localhost:3000/videoInfo");
     reqUrl.searchParams.append("id", encodeURIComponent(videoId));
     this.backendService.getJson(reqUrl.toString()).subscribe({
-      next: (json: any) => {
-        if (!json) {
+      next: json => {
+        if (!json || json.error) {
           //TODO: Fehlermeldung?
+          this.isError = true;
+          this.showVideoCard = true;
         }
-        this.thumbnailUrl = json['thumbnail_url'].substring(0, json['thumbnail_url'].lastIndexOf('/') + 1) + "maxresdefault.jpg";
-        this.title = json['title'];
-        this.author = json['author_name']
-        this.videoUrl = json['videoUrl'];
-        this.channelUrl = json['author_url'];
-        this.videoEmbed = this.sanitizer.bypassSecurityTrustResourceUrl('https://www.youtube.com/embed/' + videoId);
-        this.isVideoDataReady = true;
-        this.downloads = json['downloads'];
-        this.views = json['views'];
+        else{
+          this.thumbnailUrl = json['thumbnail_url'].substring(0, json['thumbnail_url'].lastIndexOf('/') + 1) + "maxresdefault.jpg";
+          this.title = json['title'];
+          this.author = json['author_name']
+          this.videoUrl = json['videoUrl'];
+          this.channelUrl = json['author_url'];
+          this.videoEmbed = this.sanitizer.bypassSecurityTrustResourceUrl('https://www.youtube.com/embed/' + videoId);
+          this.downloads = json['downloads'];
+          this.views = json['views'];
+        }
+      },
+      error: e => {
+        this.isError = true;
+        this.showVideoCard = true;
+      },
+      complete: () => {
+        this.showVideoCard = true;
       }
     });
   }
 
   downloadAudio(): void {
     if(this.videoUrl == null || this.title == null || this.author == null) {
-      return;
       //TODO: Fehlermeldung?
+      this.isError = true;
+      this.showVideoCard = true;
+      return;
     }
     let title;
     let artist;
@@ -129,6 +145,8 @@ export class VideoviewComponent {
       })
       .catch((err) => {
         //TODO: Fehlermeldung?
+        this.isError = true;
+        this.showVideoCard = true;
       })
       .finally(() =>{
         this.isLoading = false;

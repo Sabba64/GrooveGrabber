@@ -30,6 +30,6 @@ export class BackendService {
   }
 
   getJson(url: string): Observable<any> {
-    return this.http.get(url);
+    return this.http.get(url, { responseType: 'json' });
   }
 }
